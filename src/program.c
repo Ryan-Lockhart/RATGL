@@ -16,6 +16,10 @@
 #include "shader.h"
 #include "vertex_array.h"
 
+#include "vec3.h"
+
+#include "color.h"
+
 #ifdef _DEBUG
 #define main main
 #else
@@ -31,12 +35,12 @@ int glfwSetWindowCenter(GLFWwindow* window);
 
 void processInput(GLFWwindow* window);
 
-float vertices[] =
+vec3_t vertices[] =
 {
-     0.5f,  0.5f, 0.0f,
-     0.5f, -0.5f, 0.0f,
-    -0.5f, -0.5f, 0.0f,
-    -0.5f,  0.5f, 0.0f
+    {  1.0f,  1.0f, 0.0f },
+    {  1.0f, -1.0f, 0.0f },
+    { -1.0f, -1.0f, 0.0f },
+    { -1.0f,  1.0f, 0.0f }
 };
 
 u32 indices[] =
@@ -93,7 +97,7 @@ int main(void)
 
     reader_binary("cube.vertices", &vertex_byte_buffer);
 
-    float* vertex_buffer;
+    vec3_t* vertex_buffer;
     u64 vertex_buffer_size;
 
     deserialize_floats(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
