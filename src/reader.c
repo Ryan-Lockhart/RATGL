@@ -4,83 +4,88 @@
 #include <stdio.h>
 #include <string.h>
 
-int reader_string(const char* path, char** content)
+int reader_string(cstr path, str* content)
 {
-	u64 str_size, read_size;
-	*content = NULL;
+	if (path == NULL) return error_param_null("path", __FILE__, __LINE__);
+	if (content == NULL) return error_param_null("content", __FILE__, __LINE__);
 
-	FILE* ptr;
+	if (*content != NULL) return error_param_notnull("*content", __FILE__, __LINE__);
 
-	if (fopen_s(&ptr, path, "rb") != 0)
+	FILE* ptr = NULL;
+
+	if (fopen_s(&ptr, path, "r") != 0) return error_unopenable_file(path, __FILE__, __LINE__);
+
+	u64 size = BUFFER_SIZE;
+
+	*content = (str)malloc(size);
+
+	if (*content == NULL) return error_alloc_fail("str", size, __FILE__, __LINE__);
+
+	u64 length = 0;
+
+	int ch = 0;
+
+	while (ch != EOF)
 	{
-		printf("Failed to open file: %s\n", path);
+		ch = fgetc(ptr); ++length;
 
-		return -1;
+		*content[length] = (char)ch;
+
+		if (length >= size - 1)
+		{
+			size *= 2; void* reallocation = (str)realloc(*content, size);
+
+			if (reallocation == NULL)
+			{
+				free(*content);
+
+				return error_alloc_fail("str", size, __FILE__, __LINE__);
+			}
+		}
 	}
 
-	fseek(ptr, 0, SEEK_END);
-	str_size = (u64)ftell(ptr) + 1;
+	str reallocation = (str)realloc(*content, length + 1);
 
-	fclose(ptr);
-
-	if (fopen_s(&ptr, path, "r") != 0)
+	if (reallocation == NULL)
 	{
-		printf("Failed to open file: %s\n", path);
+		free(*content);
 
-		return -1;
+		return error_alloc_fail("str", length + 1, __FILE__, __LINE__);
 	}
 
-	void* mem = malloc(str_size);
+	*content = reallocation;
 
-	if (mem == NULL)
-	{
-		printf("Failed to allocate memory during file read!\n");
+	*content[length] = '\0';
 
-		return -1;
-	}
-
-	*content = memset(mem, '\0', str_size);
-
-	if (*content == NULL)
-	{
-		printf("Failed to allocate memory during file read!\n");
-		return -1;
-	}
-
-	read_size = fread(*content, sizeof(char), str_size - 1, ptr);
-
-	fclose(ptr);
+	if (fclose(ptr) < 0) return error_uncloseable_file(path, __FILE__, __LINE__);
 
 	return 0;
 }
 
-int reader_binary(const char* path, byte** buffer)
+int reader_binary(cstr path, byte** buffer)
 {
-	FILE* ptr;
+	if (path == NULL) return error_param_null("path", __FILE__, __LINE__);
+	if (buffer == NULL) return error_param_null("buffer", __FILE__, __LINE__);
 
-	if (fopen_s(&ptr, path, "rb") != 0)
-	{
-		printf("Failed to open file: %s\n", path);
+	if (*buffer != NULL) return error_param_notnull("*buffer", __FILE__, __LINE__);
 
-		return -1;
-	}
+	FILE* ptr = NULL;
+
+	if (fopen_s(&ptr, path, "rb") != 0) return error_unopenable_file(path, __FILE__, __LINE__);
 
 	fseek(ptr, 0, SEEK_END);
-	u64 size = (u64)ftell(ptr);
+	u64 byte_size = (u64)ftell(ptr);
 	rewind(ptr);
 
-	*buffer = malloc(size);
+	*buffer = malloc(byte_size);
 
-	if (*buffer == NULL)
-	{
-		printf("Failed to allocate memory during file read!\n");
+	if (*buffer == NULL) return error_alloc_fail("byte", byte_size, __FILE__, __LINE__);
 
-		return -1;
-	}
+	u64 read_size = fread(*buffer, BYTE_SIZE, byte_size / BYTE_SIZE, ptr);
 
-	fread(*buffer, BYTE_SIZE, size / BYTE_SIZE, ptr);
+	if (byte_size / BYTE_SIZE != read_size) return error_size_mismatch(byte_size, read_size, __FILE__, __LINE__);
 
-	fclose(ptr);
+	if (fclose(ptr) < 0) return error_uncloseable_file(path, __FILE__, __LINE__);
 
 	return 0;
 }

@@ -2,10 +2,10 @@
 
 #define READER_H
 
-#include "typedef.h"
+#include "error.h"
 
-int reader_string(const char* path, char** content);
+err_t reader_string(cstr path, str* content);
 
-int reader_binary(const char* path, byte** buffer);
+err_t reader_binary(cstr path, byte** buffer);
 
 #endif

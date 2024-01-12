@@ -4,6 +4,8 @@
 
 #include <float.h>
 
+#define forever for (;;)
+
 typedef unsigned char byte;
 
 typedef unsigned char u8;

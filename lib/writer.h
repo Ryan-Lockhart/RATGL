@@ -2,10 +2,10 @@
 
 #define WRITER_H
 
-#include "typedef.h"
+#include "error.h"
 
-int writer_string(const char* path, const char* content);
+err_t writer_string(cstr path, cstr content);
 
-int writer_binary(const char* path, const byte* buffer);
+err_t writer_binary(cstr path, const byte* buffer);
 
 #endif

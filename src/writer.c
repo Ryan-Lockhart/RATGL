@@ -4,52 +4,32 @@
 #include <stdio.h>
 #include <string.h>
 
-int writer_string(const char* path, const char* content)
+err_t writer_string(cstr path, cstr content)
 {
-	if (content == NULL)
-	{
-		printf("Cannot write to file, no content!\n");
+	FILE* ptr = NULL;
 
-		return -1;
-	}
+	if (content == NULL) return error_param_null("content", __FILE__, __LINE__);
 
-	FILE* ptr;
-
-	if (fopen_s(&ptr, path, "w") != 0)
-	{
-		printf("Failed to open file: %s\n", path);
-
-		return -1;
-	}
+	if (fopen_s(&ptr, path, "w") != 0) return error_unopenable_file(path, __FILE__, __LINE__);
 
 	fwrite(content, sizeof(char), strlen(content), ptr);
 
-	fclose(ptr);
+	if (fclose(ptr) < 0) return error_uncloseable_file(path, __FILE__, __LINE__);
 
 	return 0;
 }
 
-int writer_binary(const char* path, const byte* buffer)
+err_t writer_binary(cstr path, const byte* buffer)
 {
-	if (buffer == NULL)
-	{
-		printf("Cannot write to file, no content!\n");
+	FILE* ptr = NULL;
 
-		return -1;
-	}
+	if (buffer == NULL) return error_param_null("buffer", __FILE__, __LINE__);
 
-	FILE* ptr;
+	if (fopen_s(&ptr, path, "wb") != 0) return error_unopenable_file(path, __FILE__, __LINE__);
 
-	if (fopen_s(&ptr, path, "wb") != 0)
-	{
-		printf("Failed to open file: %s\n", path);
+	fwrite(buffer, BYTE_SIZE, sizeof(buffer) * BYTE_SIZE, ptr);
 
-		return -1;
-	}
-
-	u64 write_count = fwrite(buffer, BYTE_SIZE, sizeof(buffer) * BYTE_SIZE, ptr);
-
-	fclose(ptr);
+	if (fclose(ptr) < 0) return error_uncloseable_file(path, __FILE__, __LINE__);
 
 	return 0;
 }

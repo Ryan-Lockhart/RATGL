@@ -44,7 +44,7 @@ err_t buffer_create(byte** buffer, u64 mem_size)
 err_t buffer_destroy(byte** buffer)
 {
     if (buffer == NULL) return error_param_null("buffer", __FILE__, __LINE__);
-    if (*buffer != NULL) return error_param_notnull("*buffer", __FILE__, __LINE__);
+    if (*buffer == NULL) return error_param_null("*buffer", __FILE__, __LINE__);
 
     free(*buffer);
     *buffer = NULL;
@@ -73,7 +73,9 @@ err_t serialize_floats(byte** buffer, const f32* array, u64 size)
 
     for (u64 i = 0; i < size; ++i)
     {
+        // copy the i-th element from the array into the element of the union
         memcpy(&translator.element, array + i, sizeof(SERIALIZE_TYPE));
+        // copy the bytes of the union into the byte buffer
         memcpy(array_base_ptr + i * sizeof(SERIALIZE_TYPE), translator.bytes, sizeof(SERIALIZE_TYPE));
     }
 
@@ -101,7 +103,9 @@ err_t serialize_u32s(byte** buffer, const u32* array, u64 size)
 
     for (u64 i = 0; i < size; ++i)
     {
+        // copy the i-th element from the array into the element of the union
         memcpy(&translator.element, array + i, sizeof(SERIALIZE_TYPE));
+        // copy the bytes of the union into the byte buffer
         memcpy(array_base_ptr + i * sizeof(SERIALIZE_TYPE), translator.bytes, sizeof(SERIALIZE_TYPE));
     }
 
@@ -129,7 +133,9 @@ err_t serialize_vec2s(byte** buffer, const vec2_t* array, u64 size)
 
     for (u64 i = 0; i < size; ++i)
     {
+        // copy the i-th element from the array into the element of the union
         memcpy(&translator.element, array + i, sizeof(SERIALIZE_TYPE));
+        // copy the bytes of the union into the byte buffer
         memcpy(array_base_ptr + i * sizeof(SERIALIZE_TYPE), translator.bytes, sizeof(SERIALIZE_TYPE));
     }
 
@@ -157,7 +163,9 @@ err_t serialize_vec3s(byte** buffer, const vec3_t* array, u64 size)
 
     for (u64 i = 0; i < size; ++i)
     {
+        // copy the i-th element from the array into the element of the union
         memcpy(&translator.element, array + i, sizeof(SERIALIZE_TYPE));
+        // copy the bytes of the union into the byte buffer
         memcpy(array_base_ptr + i * sizeof(SERIALIZE_TYPE), translator.bytes, sizeof(SERIALIZE_TYPE));
     }
 
@@ -185,7 +193,9 @@ err_t serialize_vec4s(byte** buffer, const vec4_t* array, u64 size)
 
     for (u64 i = 0; i < size; ++i)
     {
+        // copy the i-th element from the array into the element of the union
         memcpy(&translator.element, array + i, sizeof(SERIALIZE_TYPE));
+        // copy the bytes of the union into the byte buffer
         memcpy(array_base_ptr + i * sizeof(SERIALIZE_TYPE), translator.bytes, sizeof(SERIALIZE_TYPE));
     }
 

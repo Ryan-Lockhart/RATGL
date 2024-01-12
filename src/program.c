@@ -29,11 +29,13 @@
 const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
+static GLFWwindow* window;
+static u32 square_shader;
+static vertex_array_t vertex_array;
+
 void framebufferReizeCallback(GLFWwindow* window, int width, int height);
 
 int glfwSetWindowCenter(GLFWwindow* window);
-
-void processInput(GLFWwindow* window);
 
 vec3_t vertices[] =
 {
@@ -49,7 +51,46 @@ u32 indices[] =
     1, 2, 3
 };
 
-int main(void)
+err_t serialize_deserialize_test()
+{
+    err_t err = ERROR_NONE;
+
+    byte* vertex_byte_buffer = NULL;
+
+    err |= serialize_vec3s(&vertex_byte_buffer, vertices, sizeof(vertices) / sizeof(vec3_t)); if (err < 0) return err;
+    err |= writer_binary("data/arrays/cube.vertices", vertex_byte_buffer); if (err < 0) return err;
+
+    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer); if (err < 0) return err;
+
+    vec3_t* vertex_buffer = NULL;
+    u64 vertex_buffer_size;
+
+    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer); if (err < 0) return err;
+    err |= buffer_destroy(&vertex_byte_buffer); if (err < 0) return err;
+
+    for (int i = 0; i < vertex_buffer_size; ++i)
+        printf("[%f, %f, %f]%s", vertex_buffer[i].x, vertex_buffer[i].y, vertex_buffer[i].z, i < vertex_buffer_size ? ",\n" : "\n\n");
+
+    byte* index_byte_buffer = NULL;
+
+    err |= serialize_u32s(&index_byte_buffer, indices, sizeof(indices) / sizeof(u32)); if (err < 0) return err;
+    err |= writer_binary("data/arrays/cube.indices", index_byte_buffer); if (err < 0) return err;
+
+    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer); if (err < 0) return err;
+
+    u32* index_buffer = NULL;
+    u64 index_buffer_size;
+
+    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer); if (err < 0) return err;
+    err |= buffer_destroy(&index_byte_buffer); if (err < 0) return err;
+
+    for (int i = 0; i < index_buffer_size; ++i)
+        printf("%u%s", index_buffer[i], i < index_buffer_size ? ",\n" : "\n\n");
+
+    return ERROR_NONE;
+}
+
+err_t initialize()
 {
     glfwInit();
 
@@ -60,7 +101,7 @@ int main(void)
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL", NULL, NULL);
 
     if (window == NULL)
     {
@@ -84,69 +125,102 @@ int main(void)
 
     glfwSetFramebufferSizeCallback(window, framebufferReizeCallback);
 
-    u32 shaderProgram;
-
-    if (program_load("shaders", "basic_shader", &shaderProgram, SHADER_VERTEX | SHADER_FRAGMENT) < 0)
+    if (program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT) < 0)
     {
-        printf("Failed to load shader program:\nbasic_shader\n");
+        printf("Failed to load shader program: basic_shader\n");
 
         return -1;
     }
 
-    byte* vertex_byte_buffer;
+    byte* vertex_byte_buffer = NULL;
 
-    reader_binary("cube.vertices", &vertex_byte_buffer);
+    reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer);
 
-    vec3_t* vertex_buffer;
+    vec3_t* vertex_buffer = NULL;
     u64 vertex_buffer_size;
 
-    deserialize_floats(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
-    free(vertex_byte_buffer);
+    deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
+    buffer_destroy(&vertex_byte_buffer);
 
-    byte* index_byte_buffer;
+    byte* index_byte_buffer = NULL;
 
-    reader_binary("cube.indices", &index_byte_buffer);
+    reader_binary("data/arrays/cube.indices", &index_byte_buffer);
 
-    u32* index_buffer;
+    u32* index_buffer = NULL;
     u64 index_buffer_size;
 
     deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer);
-    free(index_byte_buffer);
-
-    vertex_array_t vertex_array;
+    buffer_destroy(&index_byte_buffer);
 
     vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size);
 
     free(vertex_buffer);
     free(index_buffer);
 
-    while (!glfwWindowShouldClose(window))
-    {
-        glfwPollEvents();
+    return ERROR_NONE;
+}
 
-        processInput(window);
+err_t input()
+{
+    glfwPollEvents();
 
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-        glClear(GL_COLOR_BUFFER_BIT);
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 
-        program_activate(shaderProgram);
+    return ERROR_NONE;
+}
 
-        vertex_array_activate(&vertex_array);
+err_t update()
+{
+    return ERROR_NONE;
+}
 
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+err_t render()
+{
+    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT);
 
-        vertex_array_deactive();
+    program_activate(square_shader);
 
-        glfwSwapBuffers(window);
-    }
+    vertex_array_activate(&vertex_array);
 
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    vertex_array_deactive();
+
+    glfwSwapBuffers(window);
+
+    return ERROR_NONE;
+}
+
+err_t terminate()
+{
     vertex_array_delete(&vertex_array);
 
-    program_delete(shaderProgram);
+    program_delete(square_shader);
 
     glfwTerminate();
 
-    return 0;
+    return ERROR_NONE;
+}
+
+int closing() { return glfwWindowShouldClose(window); }
+
+err_t main(void)
+{
+    initialize();
+
+    forever {
+        if (closing())
+            break;
+
+        input();
+        update();
+        render();        
+    }
+
+    terminate();
+
+    return ERROR_NONE;
 }
 
 void framebufferReizeCallback(GLFWwindow* window, int width, int height)
@@ -211,9 +285,4 @@ int glfwSetWindowCenter(GLFWwindow* window)
     }
 
     return 0;
-}
-
-void processInput(GLFWwindow* window)
-{
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
 }

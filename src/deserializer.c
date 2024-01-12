@@ -198,7 +198,7 @@ err_t deserialize_vec4s(vec4_t** array, u64* size, const byte* buffer)
 
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes if the union
+        // copy the i-th element in bytes from the buffer into the bytes of the union
         memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
         // copy the element of the union into the i-th element of the array
         memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
