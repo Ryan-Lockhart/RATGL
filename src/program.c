@@ -20,6 +20,8 @@
 
 #include "color.h"
 
+#include <SOIL2/SOIL2.h>
+
 #ifdef _DEBUG
 #define main main
 #else
@@ -30,8 +32,9 @@ const int WINDOW_WIDTH = 800;
 const int WINDOW_HEIGHT = 600;
 
 static GLFWwindow* window;
-static u32 square_shader;
 static vertex_array_t vertex_array;
+static u32 square_shader;
+static u32 glyph_texture;
 
 void framebufferReizeCallback(GLFWwindow* window, int width, int height);
 
@@ -90,7 +93,7 @@ err_t serialize_deserialize_test()
     return ERROR_NONE;
 }
 
-err_t initialize()
+err_t load_window()
 {
     glfwInit();
 
@@ -101,14 +104,9 @@ err_t initialize()
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
 
-    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "LearnOpenGL", NULL, NULL);
+    window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "RATGL", NULL, NULL);
 
-    if (window == NULL)
-    {
-        printf("Failed to create GLFW window\n");
-        glfwTerminate();
-        return -1;
-    }
+    if (window == NULL) return error_window_init_fail(__FILE__, __LINE__);
 
     glfwSetWindowCenter(window);
 
@@ -116,46 +114,68 @@ err_t initialize()
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
-        printf("Failed to initialize GLAD\n");
+        glfwDestroyWindow(window);
 
-        return -1;
+        glfwTerminate();
+
+        return error_glad_init_fail(__FILE__, __LINE__);
     }
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
     glfwSetFramebufferSizeCallback(window, framebufferReizeCallback);
 
-    if (program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT) < 0)
-    {
-        printf("Failed to load shader program: basic_shader\n");
+    return ERROR_NONE;
+}
 
-        return -1;
-    }
+err_t load_shaders()
+{
+    err_t err = ERROR_NONE;
+
+    err |= program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT); if (err < 0) return err;
+
+    return ERROR_NONE;
+}
+
+err_t load_arrays()
+{
+    err_t err = ERROR_NONE;
 
     byte* vertex_byte_buffer = NULL;
 
-    reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer);
+    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer); if (err < 0) return err;
 
     vec3_t* vertex_buffer = NULL;
     u64 vertex_buffer_size;
 
-    deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
-    buffer_destroy(&vertex_byte_buffer);
+    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer); if (err < 0) return err;
+    err |= buffer_destroy(&vertex_byte_buffer); if (err < 0) return err;
 
     byte* index_byte_buffer = NULL;
 
-    reader_binary("data/arrays/cube.indices", &index_byte_buffer);
+    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer); if (err < 0) return err;
 
     u32* index_buffer = NULL;
     u64 index_buffer_size;
 
-    deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer);
-    buffer_destroy(&index_byte_buffer);
+    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer); if (err < 0) return err;
+    err |= buffer_destroy(&index_byte_buffer); if (err < 0) return err;
 
-    vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size);
+    err |= vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size); if (err < 0) return err;
 
     free(vertex_buffer);
     free(index_buffer);
+}
+
+err_t initialize()
+{
+    err_t err = ERROR_NONE;
+
+    err |= load_window(); if (err < 0) return err;
+
+    err |= load_shaders(); if (err < 0) return err;
+
+    err |= load_arrays(); if (err < 0) return err;
 
     return ERROR_NONE;
 }
@@ -197,6 +217,8 @@ err_t terminate()
     vertex_array_delete(&vertex_array);
 
     program_delete(square_shader);
+
+    glfwDestroyWindow(window);
 
     glfwTerminate();
 

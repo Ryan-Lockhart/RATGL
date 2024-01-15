@@ -1,12 +1,14 @@
 #include "deserializer.h"
 
-#include "vec2.h"
-#include "vec3.h"
-#include "vec4.h"
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "endian.h"
+
+#include "vec2.h"
+#include "vec3.h"
+#include "vec4.h"
 
 #define DESERIALIZER_TYPE u64
 
@@ -16,7 +18,21 @@ err_t deserialize_size(u64* size, const byte* buffer)
 
     union { DESERIALIZER_TYPE element; byte bytes[sizeof(DESERIALIZER_TYPE)]; } translator;
 
-    memcpy(&translator.bytes, buffer, sizeof(DESERIALIZER_TYPE));
+    translator.element = 0;
+
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
+    switch (endianness)
+    {
+        case ENDIAN_LITTLE:
+            memcpy(&translator.bytes, buffer, sizeof(DESERIALIZER_TYPE));
+            break;
+        case ENDIAN_BIGLY:
+            memcpy_inv(&translator.bytes, buffer, sizeof(DESERIALIZER_TYPE));
+            break;
+    }
+
     *size = translator.element;
 
     return ERROR_NONE;
@@ -48,12 +64,26 @@ err_t deserialize_floats(f32** array, u64* size, const byte* buffer)
     // offset pointer to the beginning of the array bytes portion of the buffer
     const byte* array_base_ptr = buffer + sizeof(u64);
 
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes if the union
-        memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
-        // copy the element of the union into the i-th element of the array
-        memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+        switch (endianness)
+        {
+            case ENDIAN_LITTLE:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+            case ENDIAN_BIGLY:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy_inv(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy_inv(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+        }
     }
 
     return ERROR_NONE;
@@ -85,12 +115,26 @@ err_t deserialize_u32s(u32** array, u64* size, const byte* buffer)
     // offset pointer to the beginning of the array bytes portion of the buffer
     const byte* array_base_ptr = buffer + sizeof(u64);
 
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes if the union
-        memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
-        // copy the element of the union into the i-th element of the array
-        memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+        switch (endianness)
+        {
+            case ENDIAN_LITTLE:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+            case ENDIAN_BIGLY:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy_inv(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy_inv(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+        }
     }
 
     return ERROR_NONE;
@@ -122,12 +166,26 @@ err_t deserialize_vec2s(vec2_t** array, u64* size, const byte* buffer)
     // offset pointer to the beginning of the array bytes portion of the buffer
     const byte* array_base_ptr = buffer + sizeof(u64);
 
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes if the union
-        memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
-        // copy the element of the union into the i-th element of the array
-        memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+        switch (endianness)
+        {
+            case ENDIAN_LITTLE:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+            case ENDIAN_BIGLY:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy_inv(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy_inv(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+        }
     }
 
     return ERROR_NONE;
@@ -159,12 +217,26 @@ err_t deserialize_vec3s(vec3_t** array, u64* size, const byte* buffer)
     // offset pointer to the beginning of the array bytes portion of the buffer
     const byte* array_base_ptr = buffer + sizeof(u64);
 
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes if the union
-        memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
-        // copy the element of the union into the i-th element of the array
-        memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+        switch (endianness)
+        {
+            case ENDIAN_LITTLE:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+            case ENDIAN_BIGLY:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy_inv(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy_inv(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+        }
     }
 
     return ERROR_NONE;
@@ -196,12 +268,26 @@ err_t deserialize_vec4s(vec4_t** array, u64* size, const byte* buffer)
     // offset pointer to the beginning of the array bytes portion of the buffer
     const byte* array_base_ptr = buffer + sizeof(u64);
 
+    // detect endianness to standardize deserialization
+    endian_t endianness = endianness_detect();
+
     for (u64 i = 0; i < *size; ++i)
     {
-        // copy the i-th element in bytes from the buffer into the bytes of the union
-        memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
-        // copy the element of the union into the i-th element of the array
-        memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+        switch (endianness)
+        {
+            case ENDIAN_LITTLE:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+            case ENDIAN_BIGLY:
+                // copy the i-th element in bytes from the buffer into the bytes if the union
+                memcpy_inv(&translator.bytes, array_base_ptr + i * sizeof(DESERIALIZER_TYPE), sizeof(DESERIALIZER_TYPE));
+                // copy the element of the union into the i-th element of the array
+                memcpy_inv(*array + i, &translator.element, sizeof(DESERIALIZER_TYPE));
+                break;
+        }
     }
 
     return ERROR_NONE;

@@ -15,51 +15,40 @@ int reader_string(cstr path, str* content)
 
 	if (fopen_s(&ptr, path, "r") != 0) return error_unopenable_file(path, __FILE__, __LINE__);
 
-	u64 size = BUFFER_SIZE;
+	fseek(ptr, 0, SEEK_END);
+	u64 str_size = (u64)ftell(ptr);
+	rewind(ptr);
 
-	*content = (str)malloc(size);
+	*content = (str)malloc(str_size);
 
-	if (*content == NULL) return error_alloc_fail("str", size, __FILE__, __LINE__);
+	if (*content == NULL) return error_alloc_fail("str", str_size, __FILE__, __LINE__);
 
-	u64 length = 0;
+	memset(*content, '\0', str_size);
 
-	int ch = 0;
+	u64 read_size = fread(*content, sizeof(char), str_size, ptr);
 
-	while (ch != EOF)
+	if (str_size != read_size)
 	{
-		ch = fgetc(ptr); ++length;
+		void* trunc = realloc(*content, read_size + 1);
 
-		*content[length] = (char)ch;
-
-		if (length >= size - 1)
+		if (trunc == NULL)
 		{
-			size *= 2; void* reallocation = (str)realloc(*content, size);
+			free(*content);
 
-			if (reallocation == NULL)
-			{
-				free(*content);
-
-				return error_alloc_fail("str", size, __FILE__, __LINE__);
-			}
+			return error_alloc_fail("str", read_size + 1, __FILE__, __LINE__);
 		}
+
+		*content = (str)trunc;
 	}
 
-	str reallocation = (str)realloc(*content, length + 1);
-
-	if (reallocation == NULL)
+	if (fclose(ptr) < 0)
 	{
 		free(*content);
 
-		return error_alloc_fail("str", length + 1, __FILE__, __LINE__);
+		return error_uncloseable_file(path, __FILE__, __LINE__);
 	}
 
-	*content = reallocation;
-
-	*content[length] = '\0';
-
-	if (fclose(ptr) < 0) return error_uncloseable_file(path, __FILE__, __LINE__);
-
-	return 0;
+	return ERROR_NONE;
 }
 
 int reader_binary(cstr path, byte** buffer)

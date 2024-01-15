@@ -4,7 +4,13 @@
 
 #include <float.h>
 
+#define false 0
+#define true 1
+
 #define forever for (;;)
+
+typedef void* mem;
+typedef const void* cmem;
 
 typedef unsigned char byte;
 

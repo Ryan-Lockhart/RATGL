@@ -19,9 +19,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="image.c" />
     <ClCompile Include="src\color.c" />
     <ClCompile Include="src\deserializer.c" />
+    <ClCompile Include="src\endian.c" />
     <ClCompile Include="src\error.c" />
+    <ClCompile Include="src\image.c" />
     <ClCompile Include="src\program.c" />
     <ClCompile Include="src\reader.c" />
     <ClCompile Include="src\serializer.c" />
@@ -48,9 +51,12 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="image.h" />
     <ClInclude Include="lib\color.h" />
     <ClInclude Include="lib\deserializer.h" />
+    <ClInclude Include="lib\endian.h" />
     <ClInclude Include="lib\error.h" />
+    <ClInclude Include="lib\image.h" />
     <ClInclude Include="lib\reader.h" />
     <ClInclude Include="lib\serializer.h" />
     <ClInclude Include="lib\shader.h" />
@@ -61,6 +67,11 @@
     <ClInclude Include="lib\vec4.h" />
     <ClInclude Include="lib\vertex_array.h" />
     <ClInclude Include="lib\writer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <CopyFileToFolders Include="data\glyphs\glyphs_12x12.png" />
+    <CopyFileToFolders Include="data\glyphs\glyphs_16x16.png" />
+    <CopyFileToFolders Include="data\glyphs\glyphs_8x8.png" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
