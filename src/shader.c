@@ -9,7 +9,7 @@
 
 #include "reader.h"
 
-str shader_fetch_name(shader_t type)
+cstr shader_fetch_name(shader_t type)
 {
 	switch (type)
 	{
@@ -24,7 +24,7 @@ str shader_fetch_name(shader_t type)
 	}
 }
 
-str shader_fetch_ext(shader_t type)
+cstr shader_fetch_ext(shader_t type)
 {
 	switch (type)
 	{
@@ -76,7 +76,7 @@ err_t path_append_ext(str* path, cstr ext)
 
 	u64 full_len = path_len + ext_len + 1;
 
-	memory reall = realloc(*path, full_len);
+	mem reall = realloc(*path, full_len);
 
 	if (reall == NULL) return error_alloc_fail("str", full_len, __FILE__, __LINE__);
 

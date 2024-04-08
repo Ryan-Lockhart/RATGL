@@ -98,6 +98,13 @@ err_t error_glad_init_fail(cstr file, i32 line)
 	return ERROR_GLAD_INIT_FAIL;
 }
 
+err_t error_glfw_init_fail(cstr file, i32 line)
+{
+	time_log(); printf(" - ERROR (%s, line %d): failed to initialize GLFW!\n", file, line);
+
+	return ERROR_GLFW_INIT_FAIL;
+}
+
 err_t error_unknown_enum(cstr type, i32 value, cstr file, i32 line)
 {
 	time_log(); printf(" - ERROR (%s, line %d): enum %s does not contain value of %d!\n", type, value, file, line);

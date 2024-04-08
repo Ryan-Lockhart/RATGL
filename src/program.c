@@ -20,16 +20,17 @@
 
 #include "color.h"
 
-#include <SOIL2/SOIL2.h>
-
 #ifdef _DEBUG
 #define main main
 #else
 #define main WinMain
 #endif
 
-const int WINDOW_WIDTH = 800;
-const int WINDOW_HEIGHT = 600;
+const int WINDOW_WIDTH = 640;
+const int WINDOW_HEIGHT = 480;
+
+const int WINDOW_WIDTH_HALF = 640 / 2;
+const int WINDOW_HEIGHT_HALF = 480 / 2;
 
 static GLFWwindow* window;
 static vertex_array_t vertex_array;
@@ -54,38 +55,52 @@ u32 indices[] =
     1, 2, 3
 };
 
-err_t serialize_deserialize_test()
+err_t reserialize_test()
 {
     err_t err = ERROR_NONE;
 
     byte* vertex_byte_buffer = NULL;
 
-    err |= serialize_vec3s(&vertex_byte_buffer, vertices, sizeof(vertices) / sizeof(vec3_t)); if (err < 0) return err;
-    err |= writer_binary("data/arrays/cube.vertices", vertex_byte_buffer); if (err < 0) return err;
+    err |= serialize_vec3s(&vertex_byte_buffer, vertices, sizeof(vertices) / sizeof(vec3_t));
+    if (err != ERROR_NONE) return err;
 
-    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer); if (err < 0) return err;
+    err |= writer_binary("data/arrays/cube.vertices", vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     vec3_t* vertex_buffer = NULL;
     u64 vertex_buffer_size;
 
-    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer); if (err < 0) return err;
-    err |= buffer_destroy(&vertex_byte_buffer); if (err < 0) return err;
+    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= buffer_destroy(&vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     for (int i = 0; i < vertex_buffer_size; ++i)
         printf("[%f, %f, %f]%s", vertex_buffer[i].x, vertex_buffer[i].y, vertex_buffer[i].z, i < vertex_buffer_size ? ",\n" : "\n\n");
 
     byte* index_byte_buffer = NULL;
 
-    err |= serialize_u32s(&index_byte_buffer, indices, sizeof(indices) / sizeof(u32)); if (err < 0) return err;
-    err |= writer_binary("data/arrays/cube.indices", index_byte_buffer); if (err < 0) return err;
+    err |= serialize_u32s(&index_byte_buffer, indices, sizeof(indices) / sizeof(u32));
+    if (err != ERROR_NONE) return err;
 
-    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer); if (err < 0) return err;
+    err |= writer_binary("data/arrays/cube.indices", index_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     u32* index_buffer = NULL;
     u64 index_buffer_size;
 
-    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer); if (err < 0) return err;
-    err |= buffer_destroy(&index_byte_buffer); if (err < 0) return err;
+    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= buffer_destroy(&index_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     for (int i = 0; i < index_buffer_size; ++i)
         printf("%u%s", index_buffer[i], i < index_buffer_size ? ",\n" : "\n\n");
@@ -95,7 +110,7 @@ err_t serialize_deserialize_test()
 
 err_t load_window()
 {
-    glfwInit();
+    if (glfwInit() == GLFW_FALSE) return error_glfw_init_fail(__FILE__, __LINE__);
 
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -132,7 +147,8 @@ err_t load_shaders()
 {
     err_t err = ERROR_NONE;
 
-    err |= program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT); if (err < 0) return err;
+    err |= program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT);
+    if (err != ERROR_NONE) return err;
 
     return ERROR_NONE;
 }
@@ -143,25 +159,34 @@ err_t load_arrays()
 
     byte* vertex_byte_buffer = NULL;
 
-    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer); if (err < 0) return err;
+    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     vec3_t* vertex_buffer = NULL;
     u64 vertex_buffer_size;
 
-    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer); if (err < 0) return err;
-    err |= buffer_destroy(&vertex_byte_buffer); if (err < 0) return err;
+    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= buffer_destroy(&vertex_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     byte* index_byte_buffer = NULL;
 
-    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer); if (err < 0) return err;
+    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
     u32* index_buffer = NULL;
     u64 index_buffer_size;
 
-    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer); if (err < 0) return err;
-    err |= buffer_destroy(&index_byte_buffer); if (err < 0) return err;
+    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer);
+    if (err != ERROR_NONE) return err;
 
-    err |= vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size); if (err < 0) return err;
+    err |= buffer_destroy(&index_byte_buffer);
+    if (err != ERROR_NONE) return err;
+
+    err |= vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size);
+    if (err != ERROR_NONE) return err;
 
     free(vertex_buffer);
     free(index_buffer);
@@ -171,11 +196,11 @@ err_t initialize()
 {
     err_t err = ERROR_NONE;
 
-    err |= load_window(); if (err < 0) return err;
+    err |= load_window(); if (err != ERROR_NONE) return err;
 
-    err |= load_shaders(); if (err < 0) return err;
+    err |= load_shaders(); if (err != ERROR_NONE) return err;
 
-    err |= load_arrays(); if (err < 0) return err;
+    err |= load_arrays(); if (err != ERROR_NONE) return err;
 
     return ERROR_NONE;
 }
