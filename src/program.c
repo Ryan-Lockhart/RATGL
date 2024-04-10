@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <glad/glad.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "typedef.h"
@@ -14,7 +14,6 @@
 #include "deserializer.h"
 
 #include "shader.h"
-#include "vertex_array.h"
 
 #include "vec3.h"
 
@@ -33,9 +32,6 @@ const int WINDOW_WIDTH_HALF = 640 / 2;
 const int WINDOW_HEIGHT_HALF = 480 / 2;
 
 static GLFWwindow* window;
-static vertex_array_t vertex_array;
-static u32 square_shader;
-static u32 glyph_texture;
 
 void framebufferReizeCallback(GLFWwindow* window, int width, int height);
 
@@ -127,13 +123,13 @@ err_t load_window()
 
     glfwMakeContextCurrent(window);
 
-    if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
+    if (glewInit() != GLEW_OK)
     {
         glfwDestroyWindow(window);
 
         glfwTerminate();
 
-        return error_glad_init_fail(__FILE__, __LINE__);
+        return error_glew_init_fail(__FILE__, __LINE__);
     }
 
     glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
@@ -147,9 +143,6 @@ err_t load_shaders()
 {
     err_t err = ERROR_NONE;
 
-    err |= program_load("data/shaders", "basic_shader", &square_shader, SHADER_VERTEX | SHADER_FRAGMENT);
-    if (err != ERROR_NONE) return err;
-
     return ERROR_NONE;
 }
 
@@ -157,50 +150,16 @@ err_t load_arrays()
 {
     err_t err = ERROR_NONE;
 
-    byte* vertex_byte_buffer = NULL;
-
-    err |= reader_binary("data/arrays/cube.vertices", &vertex_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    vec3_t* vertex_buffer = NULL;
-    u64 vertex_buffer_size;
-
-    err |= deserialize_vec3s(&vertex_buffer, &vertex_buffer_size, vertex_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    err |= buffer_destroy(&vertex_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    byte* index_byte_buffer = NULL;
-
-    err |= reader_binary("data/arrays/cube.indices", &index_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    u32* index_buffer = NULL;
-    u64 index_buffer_size;
-
-    err |= deserialize_u32s(&index_buffer, &index_buffer_size, index_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    err |= buffer_destroy(&index_byte_buffer);
-    if (err != ERROR_NONE) return err;
-
-    err |= vertex_array_create(&vertex_array, 0, vertex_buffer, vertex_buffer_size, index_buffer, index_buffer_size);
-    if (err != ERROR_NONE) return err;
-
-    free(vertex_buffer);
-    free(index_buffer);
+    return ERROR_NONE;
 }
 
 err_t initialize()
 {
     err_t err = ERROR_NONE;
 
-    err |= load_window(); if (err != ERROR_NONE) return err;
-
-    err |= load_shaders(); if (err != ERROR_NONE) return err;
-
-    err |= load_arrays(); if (err != ERROR_NONE) return err;
+    if (err = load_window() != ERROR_NONE) return err;
+    if (err = load_shaders() != ERROR_NONE) return err;
+    if (err = load_arrays() != ERROR_NONE) return err;
 
     return ERROR_NONE;
 }
@@ -209,7 +168,8 @@ err_t input()
 {
     glfwPollEvents();
 
-    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, GLFW_TRUE);
+    if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+        glfwSetWindowShouldClose(window, GLFW_TRUE);
 
     return ERROR_NONE;
 }
@@ -221,16 +181,8 @@ err_t update()
 
 err_t render()
 {
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT);
-
-    program_activate(square_shader);
-
-    vertex_array_activate(&vertex_array);
-
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
-
-    vertex_array_deactive();
 
     glfwSwapBuffers(window);
 
@@ -239,10 +191,6 @@ err_t render()
 
 err_t terminate()
 {
-    vertex_array_delete(&vertex_array);
-
-    program_delete(square_shader);
-
     glfwDestroyWindow(window);
 
     glfwTerminate();
@@ -254,18 +202,20 @@ int closing() { return glfwWindowShouldClose(window); }
 
 err_t main(void)
 {
-    initialize();
+    err_t err = ERROR_NONE;
+
+    if (err = initialize() != ERROR_NONE) return err;
 
     forever {
         if (closing())
             break;
 
-        input();
-        update();
-        render();        
+        if (err = input() != ERROR_NONE) return err;
+        if (err = update() != ERROR_NONE) return err;
+        if (err = render() != ERROR_NONE) return err;        
     }
 
-    terminate();
+    if (err = terminate() != ERROR_NONE) return err;
 
     return ERROR_NONE;
 }
@@ -273,6 +223,7 @@ err_t main(void)
 void framebufferReizeCallback(GLFWwindow* window, int width, int height)
 {
     glViewport(0, 0, width, height);
+    glfwSetWindowCenter(window);
 }
 
 int glfwSetWindowCenter(GLFWwindow* window)

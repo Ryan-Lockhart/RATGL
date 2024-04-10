@@ -19,7 +19,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="image.c" />
+    <ClCompile Include="src\atlas.c" />
     <ClCompile Include="src\color.c" />
     <ClCompile Include="src\deserializer.c" />
     <ClCompile Include="src\endian.c" />
@@ -29,11 +29,12 @@
     <ClCompile Include="src\reader.c" />
     <ClCompile Include="src\serializer.c" />
     <ClCompile Include="src\shader.c" />
+    <ClCompile Include="src\stbi_impl.c" />
     <ClCompile Include="src\stringify.c" />
     <ClCompile Include="src\vec2.c" />
     <ClCompile Include="src\vec3.c" />
     <ClCompile Include="src\vec4.c" />
-    <ClCompile Include="src\vertex_array.c" />
+    <ClCompile Include="src\buffer.c" />
     <ClCompile Include="src\writer.c" />
   </ItemGroup>
   <ItemGroup>
@@ -51,7 +52,7 @@
     </CopyFileToFolders>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="image.h" />
+    <ClInclude Include="lib\atlas.h" />
     <ClInclude Include="lib\color.h" />
     <ClInclude Include="lib\deserializer.h" />
     <ClInclude Include="lib\endian.h" />
@@ -65,7 +66,7 @@
     <ClInclude Include="lib\vec2.h" />
     <ClInclude Include="lib\vec3.h" />
     <ClInclude Include="lib\vec4.h" />
-    <ClInclude Include="lib\vertex_array.h" />
+    <ClInclude Include="lib\buffer.h" />
     <ClInclude Include="lib\writer.h" />
   </ItemGroup>
   <ItemGroup>

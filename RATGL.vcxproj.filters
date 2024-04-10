@@ -51,19 +51,22 @@
     <ClCompile Include="src\vec4.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\vertex_array.c">
+    <ClCompile Include="src\buffer.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\writer.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="image.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\endian.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\image.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\atlas.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="src\stbi_impl.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -101,19 +104,19 @@
     <ClInclude Include="lib\vec4.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="lib\vertex_array.h">
+    <ClInclude Include="lib\buffer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lib\writer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lib\endian.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="lib\image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="lib\atlas.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

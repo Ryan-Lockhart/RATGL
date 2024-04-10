@@ -17,16 +17,12 @@ typedef enum err_t {
 	ERROR_IMAGE_LOAD,
 	ERROR_NON_POWER_OF_TWO,
 	ERROR_WINDOW_INIT_FAIL,
-	ERROR_GLAD_INIT_FAIL,
+	ERROR_GLEW_INIT_FAIL,
 	ERROR_GLFW_INIT_FAIL,
 	ERROR_UNKNOWN_ENUM,
 	ERROR_SHADER_COMPIL_FAIL,
+	ERROR_SHADER_LINK_FAIL,
 } err_t;
-
-/// <summary>
-/// logs the current time
-/// </summary>
-void time_log(void);
 
 /// <summary>
 /// logs and returns an error when a *alloc call fails to allocate memory
@@ -131,12 +127,12 @@ err_t error_not_power_of_two(cstr name, u64 size, cstr file, i32 line);
 err_t error_window_init_fail(cstr file, i32 line);
 
 /// <summary>
-/// logs and returns an error when GLAD fails to initialize
+/// logs and returns an error when GLEW fails to initialize
 /// </summary>
 /// <param name="file">file in which this error occured</param>
 /// <param name="line">line at which this error occured</param>
-/// <returns>ERROR_GLAD_INIT_FAIL</returns>
-err_t error_glad_init_fail(cstr file, i32 line);
+/// <returns>ERROR_GLEW_INIT_FAIL</returns>
+err_t error_glew_init_fail(cstr file, i32 line);
 
 /// <summary>
 /// logs and returns an error when GLFW fails to initialize
@@ -157,6 +153,16 @@ err_t error_glfw_init_fail(cstr file, i32 line);
 err_t error_unknown_enum(cstr type, i32 value, cstr file, i32 line);
 
 /// <summary>
+/// logs and returns an error when an invalid enum value is passed to a switch
+/// </summary>
+/// <param name="type">type of the enum</param>
+/// <param name="value">invalid value of the enum</param>
+/// <param name="file">file in which this error occured</param>
+/// <param name="line">line at which this error occured</param>
+/// <returns>ERROR_UNKNOWN_ENUM</returns>
+err_t error_invalid_enum(cstr type, i32 value, cstr file, i32 line);
+
+/// <summary>
 /// logs and returns an error when opengl fails to compile a shader program
 /// </summary>
 /// <param name="message">error message from opengl</param>
@@ -164,5 +170,14 @@ err_t error_unknown_enum(cstr type, i32 value, cstr file, i32 line);
 /// <param name="line">line at which this error occured</param>
 /// <returns>ERROR_SHADER_COMPIL_FAIL</returns>
 err_t error_shader_compil_fail(str message, cstr file, i32 line);
+
+/// <summary>
+/// logs and returns an error when opengl fails to link a shader program
+/// </summary>
+/// <param name="message">error message from opengl</param>
+/// <param name="file">file in which this error occured</param>
+/// <param name="line">line at which this error occured</param>
+/// <returns>ERROR_SHADER_LINK_FAIL</returns>
+err_t error_shader_link_fail(str message, cstr file, i32 line);
 
 #endif

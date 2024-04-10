@@ -17,6 +17,8 @@ typedef enum shader_t
 	SHADER_COMPUTE = 1 << 5,
 } shader_t;
 
+#define MAX_SHADERS 6
+
 /// <summary>
 /// fetches the cstr name of the shader type
 /// </summary>
@@ -38,15 +40,16 @@ cstr shader_fetch_ext(shader_t type);
 /// <param name="path"></param>
 /// <param name="name"></param>
 /// <returns></returns>
-err_t path_create(str* buffer, cstr path, cstr name);
+err_t path_create(str* path, cstr base, cstr name);
 
 /// <summary>
 /// appends the appropriate shader file extension to a partial path
 /// </summary>
 /// <param name="path">- partial path</param>
+/// <param name="ext">- base path of file</param>
 /// <param name="ext">- extension to append</param>
 /// <returns>ERROR_NONE on success; ERROR_PARAM_NULL or ERROR_UNKNOWN_ENUM on failure</returns>
-err_t path_append_ext(str* path, cstr ext);
+err_t path_append_ext(str* path, cstr base, cstr ext);
 
 /// <summary>
 /// destroys a path

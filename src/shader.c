@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#include <glad/glad.h>
+#include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
 #include "reader.h"
@@ -39,51 +39,49 @@ cstr shader_fetch_ext(shader_t type)
 	}
 }
 
-err_t path_create(str* buffer, cstr path, cstr name)
+err_t path_create(str* path, cstr base, cstr name)
 {
-	if (buffer == NULL) return error_param_null("buffer", __FILE__, __LINE__);
-	if (*buffer != NULL) return error_param_notnull("*buffer", __FILE__, __LINE__);
-
 	if (path == NULL) return error_param_null("path", __FILE__, __LINE__);
+	if (*path != NULL) return error_param_notnull("*path", __FILE__, __LINE__);
+
+	if (base == NULL) return error_param_null("base", __FILE__, __LINE__);
 	if (name == NULL) return error_param_null("name", __FILE__, __LINE__);
 
-	u64 path_len = strlen(path);
+	u64 path_len = strlen(base);
 	u64 name_len = strlen(name);
 
 	u64 full_len = path_len + name_len + 2;
 
-	*buffer = (str)malloc(full_len);
+	*path = (str)malloc(full_len);
 
-	if (*buffer == NULL) return error_alloc_fail("str", full_len, __FILE__, __LINE__);
+	if (*path == NULL) return error_alloc_fail("str", full_len, __FILE__, __LINE__);
 
-	memset(*buffer, '\0', full_len);
-	memcpy(*buffer, path, path_len);
-	memset(*buffer + path_len, '/', 1);
-	memcpy(*buffer + path_len + 1, name, name_len);
+	strcpy_s(*path, full_len, base);
+	strcat_s(*path, full_len, "/");
+	strcat_s(*path, full_len, name);
 
 	return ERROR_NONE;
 }
 
-err_t path_append_ext(str* path, cstr ext)
+err_t path_append_ext(str* path, cstr base, cstr ext)
 {
 	if (path == NULL) return error_param_null("path", __FILE__, __LINE__);
-	if (*path == NULL) return error_param_null("*path", __FILE__, __LINE__);
+	if (*path != NULL) return error_param_notnull("*path", __FILE__, __LINE__);
 
+	if (base == NULL) return error_param_null("base", __FILE__, __LINE__);
 	if (ext == NULL) return error_param_null("ext", __FILE__, __LINE__);
 
-	u64 path_len = strlen(path);
+	u64 base_len = strlen(base);
 	u64 ext_len = strlen(ext);
 
-	u64 full_len = path_len + ext_len + 1;
+	u64 path_len = base_len + ext_len + 1;
 
-	mem reall = realloc(*path, full_len);
+	*path = (str)malloc(path_len);
 
-	if (reall == NULL) return error_alloc_fail("str", full_len, __FILE__, __LINE__);
+	if (*path == NULL) return error_alloc_fail("str", path_len, __FILE__, __LINE__);
 
-	*path = (str)reall;
-
-	memcpy(*path + path_len, ext, ext_len);
-	memset(*path + path_len + ext_len, '\0', 1);
+	strcpy_s(*path, path_len, base);
+	strcat_s(*path, path_len, ext);
 
 	return ERROR_NONE;
 }
@@ -107,13 +105,16 @@ err_t program_load(cstr path, cstr name, u32* program, shader_t type)
 	if (path == NULL) return error_param_null("path", __FILE__, __LINE__);
 	if (name == NULL) return error_param_null("name", __FILE__, __LINE__);
 
+	err_t err = ERROR_NONE;
+
 	*program = glCreateProgram();
 
-	
+	str partial_path = NULL;
+	path_create(&partial_path, path, name);
 
-	u32 shaders[6] = { 0, 0, 0, 0, 0, 0 };
+	u32 shaders[MAX_SHADERS] = { 0, 0, 0, 0, 0, 0 };
 
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < MAX_SHADERS; ++i)
 	{
 		shader_t current = (shader_t)1 << i;
 
@@ -121,9 +122,9 @@ err_t program_load(cstr path, cstr name, u32* program, shader_t type)
 
 		shader_create(&shaders[i], current);
 
-		if (shader_load(full_path, &shaders[i], current) < 0)
+		if (err = shader_load(partial_path, &shaders[i], current) != ERROR_NONE)
 		{
-			for (; i > 0; i--)
+			for (; i > 0; --i)
 			{
 				shader_t current = (shader_t)1 << i;
 
@@ -133,11 +134,16 @@ err_t program_load(cstr path, cstr name, u32* program, shader_t type)
 				shaders[i] = 0;
 			}
 
-			return -1;
+			path_destroy(&partial_path);
+			glDeleteProgram(*program);
+
+			return err;
 		}
 
 		glAttachShader(*program, shaders[i]);
 	}
+
+	path_destroy(&partial_path);
 
 	glLinkProgram(*program);
 
@@ -158,9 +164,7 @@ err_t program_load(cstr path, cstr name, u32* program, shader_t type)
 	if (!success)
 	{
 		glGetProgramInfoLog(*program, LOG_SIZE, NULL, infoLog);
-		printf("Failed to link shader program:\n%s\n", infoLog);
-
-		return -1;
+		return error_shader_link_fail(infoLog, __FILE__, __LINE__);
 	}
 
 	return 0;
@@ -191,15 +195,20 @@ err_t shader_load(cstr path, u32* shader, shader_t type)
 
 	if (type == 0) return error_param_null("type", __FILE__, __LINE__);
 
-	char full_path[BUFFER_SIZE];
+	str full_path = NULL;
 
-	strcpy_s(full_path, BUFFER_SIZE, path);
-
-	err |= path_append_ext(full_path, BUFFER_SIZE, type); if (err < 0) return err;
+	if (err = path_append_ext(&full_path, path, shader_fetch_ext(type)) != ERROR_NONE) return err;
 
 	char* contents = NULL;
 
-	err |= reader_string(full_path, &contents); if (err < 0) return err;
+	if (err = reader_string(full_path, &contents) != ERROR_NONE)
+	{
+		path_destroy(&full_path);
+
+		return err;
+	}
+
+	path_destroy(&full_path);
 
 	glShaderSource(*shader, 1, &contents, NULL);
 	glCompileShader(*shader);
@@ -215,9 +224,7 @@ err_t shader_load(cstr path, u32* shader, shader_t type)
 	if (!success)
 	{
 		glGetShaderInfoLog(*shader, LOG_SIZE, NULL, infoLog);
-		printf("Compilation of shader program failed:\n%s\n", infoLog);
-
-		return -1;
+		return error_shader_compil_fail(infoLog, __FILE__, __LINE__);
 	}
 
 	return ERROR_NONE;
